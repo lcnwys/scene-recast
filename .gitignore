@@ -1,0 +1,18 @@
+/data/
+/.playwright-cli/
+*.log
+.env
+.env.*
+!.env.example
+node_modules/
+.DS_Store
+Thumbs.db
+
+# Persistent project media, transcripts, settings, logs and local exports
+/backups/
+/exports/
+*.zip
+
+# Python runtime cache for the integrated Auto Ducking core
+__pycache__/
+*.pyc

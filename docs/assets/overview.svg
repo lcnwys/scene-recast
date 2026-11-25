@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="372" viewBox="0 0 1080 372" role="img" aria-labelledby="title desc">
+  <title id="title">SceneRecast workflow overview</title>
+  <desc id="desc">Review three speakers, assign distinct voices, then mix dialogue with a continuous background music bed that ducks under speech. All labels are illustrative.</desc>
+  <style>
+    text{font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#eef4fb}
+    .muted{fill:#b5c2d2;font-size:13px}.label{fill:#9bd8ff;font-size:11px;font-weight:700;letter-spacing:1.5px}
+    .heading{font-size:18px;font-weight:700}.small{font-size:12px}.mono{font-family:ui-monospace,monospace;font-size:12px;fill:#b5c2d2}
+  </style>
+  <rect width="1080" height="372" rx="16" fill="#0b1018"/>
+  <text x="32" y="42" font-size="24" font-weight="750">SceneRecast</text>
+  <text x="1038" y="40" text-anchor="end" class="muted">RECAST THE VOICES. RESCORE THE SCENE.</text>
+  <path d="M32 62H1048" stroke="#26364a"/>
+  <g transform="translate(32 84)">
+    <rect width="308" height="232" rx="12" fill="#111a27" stroke="#26364a"/>
+    <text x="18" y="28" class="label">01 / REVIEW</text>
+    <text x="18" y="56" class="heading">Meet the cast.</text>
+    <rect x="18" y="75" width="272" height="67" rx="6" fill="#162233"/>
+    <g fill="#9bd8ff"><circle cx="78" cy="98" r="9"/><path d="M59 131v-10a19 19 0 0 1 38 0v10z"/></g>
+    <g fill="#76d6b0"><circle cx="154" cy="98" r="9"/><path d="M135 131v-10a19 19 0 0 1 38 0v10z"/></g>
+    <g fill="#f2c77b"><circle cx="230" cy="98" r="9"/><path d="M211 131v-10a19 19 0 0 1 38 0v10z"/></g>
+    <text x="18" y="169" class="mono">00:01  SPEAKER A</text><path d="M18 180H270" stroke="#26364a"/>
+    <text x="18" y="202" class="small">Click a line. Watch. Listen. Confirm.</text>
+  </g>
+  <path d="M348 196h25m-7-6 7 6-7 6" stroke="#9bd8ff" fill="none" stroke-width="2"/>
+  <g transform="translate(386 84)">
+    <rect width="290" height="232" rx="12" fill="#111a27" stroke="#26364a"/>
+    <text x="18" y="28" class="label">02 / RECAST</text>
+    <text x="18" y="56" class="heading">A voice for every role.</text>
+    <g class="small">
+      <rect x="18" y="77" width="254" height="34" rx="6" fill="#162233"/><circle cx="34" cy="94" r="4" fill="#9bd8ff"/><text x="48" y="99">Speaker A</text><text x="254" y="99" text-anchor="end">Voice 01</text>
+      <rect x="18" y="119" width="254" height="34" rx="6" fill="#162233"/><circle cx="34" cy="136" r="4" fill="#76d6b0"/><text x="48" y="141">Speaker B</text><text x="254" y="141" text-anchor="end">Voice 02</text>
+      <rect x="18" y="161" width="254" height="34" rx="6" fill="#162233"/><circle cx="34" cy="178" r="4" fill="#f2c77b"/><text x="48" y="183">Speaker C</text><text x="254" y="183" text-anchor="end">Voice 03</text>
+    </g>
+    <text x="18" y="218" class="muted">Keep the performance and timing.</text>
+  </g>
+  <path d="M684 196h25m-7-6 7 6-7 6" stroke="#9bd8ff" fill="none" stroke-width="2"/>
+  <g transform="translate(722 84)">
+    <rect width="326" height="232" rx="12" fill="#111a27" stroke="#26364a"/>
+    <text x="18" y="28" class="label">03 / RESCORE</text>
+    <text x="18" y="56" class="heading">Dialogue first. Music flows.</text>
+    <text x="18" y="86" class="muted">DIALOGUE</text>
+    <rect x="18" y="97" width="290" height="22" rx="4" fill="#162233"/>
+    <rect x="48" y="97" width="64" height="22" rx="3" fill="#9bd8ff"/><rect x="142" y="97" width="74" height="22" rx="3" fill="#76d6b0"/><rect x="244" y="97" width="44" height="22" rx="3" fill="#f2c77b"/>
+    <text x="18" y="146" class="muted">CONTINUOUS MUSIC BED</text>
+    <path d="M18 163H33L47 188H112L126 163H127L141 188H216L230 163H231L245 188H288L302 163H308" stroke="#4bb8f2" stroke-width="3" fill="none" stroke-linejoin="round"/>
+    <text x="18" y="218" class="muted">Auto Ducking · Independent A/B playback</text>
+  </g>
+  <text x="32" y="346" class="muted">Illustrative workflow · Local media processing · Bring your own ElevenLabs API key</text>
+</svg>

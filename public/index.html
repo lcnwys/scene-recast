@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>声幕 SceneRecast · 多人视频换声与自动配乐</title>
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">SR</div>
+        <div>
+          <div class="brand-name">SceneRecast · 声幕</div>
+          <div class="brand-subtitle">RECAST THE VOICES. RESCORE THE SCENE.</div>
+        </div>
+      </div>
+      <div class="system-status">
+        <span class="status-pill" id="apiStatus"><i></i> ElevenLabs 检查中</span>
+        <span class="status-pill" id="mediaStatus"><i></i> FFmpeg 检查中</span>
+        <button class="button button-quiet" type="button" id="cleanupButton" disabled>清理本次数据</button>
+        <button class="button button-quiet debug-trigger" type="button" id="debugOpenButton">诊断记录</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="intro">
+        <div class="eyebrow">VOICE TRANSFORMATION WORKFLOW</div>
+        <h1>同一场戏，全新声场。</h1>
+        <p>识别对话中的每位说话人，为他们分配不同音色。保留原视频画面和对话节奏，生成可独立试听对比的新视频。</p>
+      </section>
+
+      <section class="panel api-key-panel" id="apiKeyPanel">
+        <div class="panel-heading">
+          <div>
+            <div class="section-kicker">YOUR ELEVENLABS ACCOUNT</div>
+            <h2>连接你的 ElevenLabs API</h2>
+          </div>
+          <span class="quiet-tag">BYOK · 自带 API Key</span>
+        </div>
+        <div class="api-key-row">
+          <label class="api-key-field" for="apiKeyInput">
+            <span>API Key</span>
+            <input id="apiKeyInput" type="password" autocomplete="new-password" autocapitalize="off" spellcheck="false" placeholder="粘贴你的 ElevenLabs API Key">
+          </label>
+          <button class="button button-primary" type="button" id="connectApiKeyButton">验证并连接</button>
+          <button class="button button-quiet" type="button" id="clearApiKeyButton">清除 Key</button>
+        </div>
+        <p class="api-key-hint" id="apiKeyHint">请使用你自己的 ElevenLabs API Key。Key 只保存在当前页面内存，通过本机后端请求 ElevenLabs；不会写入文件或浏览器存储。</p>
+        <p class="api-key-hint">本 Demo 需在你自己的电脑本地运行，不要部署到公开网址。视频、音频和字幕按项目持久保存在本机 data/projects/，关闭服务后仍保留；仅在点击「清理本次数据」后删除；提取出的音频会发送到 ElevenLabs 进行识别和变声。</p>
+      </section>
+
+      <label class="project-picker">已保存项目
+        <select id="savedProjects" aria-label="打开已保存项目"><option value="">新建视频项目</option></select>
+      </label>
+      <nav class="stepper" aria-label="处理步骤">
+        <div class="step active" data-step="1"><span>01</span><b>上传素材</b></div>
+        <div class="step" data-step="2"><span>02</span><b>识别人物</b></div>
+        <div class="step" data-step="3"><span>03</span><b>生成配音</b></div>
+        <div class="step" data-step="4"><span>04</span><b>添加配乐</b></div>
+        <div class="step" data-step="5"><span>05</span><b>最终合成</b></div>
+      </nav>
+
+      <section class="panel upload-panel" id="uploadPanel">
+        <div class="panel-heading">
+          <div>
+            <div class="section-kicker">SOURCE VIDEO</div>
+            <h2>上传多人对话视频</h2>
+          </div>
+          <span class="quiet-tag">MP4 / MOV / MKV / WEBM · 最长 10 分钟</span>
+        </div>
+        <label class="dropzone" id="dropzone" for="fileInput">
+          <input id="fileInput" type="file" accept="video/mp4,video/quicktime,video/x-matroska,video/webm,.mp4,.mov,.m4v,.mkv,.webm">
+          <span class="upload-symbol">↑</span>
+          <strong>拖入视频，或点击选择文件</strong>
+          <span class="muted">视频按项目保存在本机 data/projects/ 目录；提取音频会发送到 ElevenLabs API</span>
+        </label>
+        <div class="selected-file" id="selectedFile" hidden>
+          <div class="file-symbol">MP4</div>
+          <div class="file-details">
+            <strong id="selectedName">—</strong>
+            <span id="selectedMeta" class="muted">—</span>
+          </div>
+          <button class="button button-quiet" id="clearFileButton" type="button">更换文件</button>
+        </div>
+        <div class="upload-actions">
+          <div class="inline-note" id="uploadHint">建议使用 20–90 秒、4 人以上轮流讲话的素材。</div>
+          <button class="button button-primary" id="uploadButton" type="button" disabled>上传视频 <span>→</span></button>
+        </div>
+        <div class="progress-wrap" id="uploadProgressWrap" hidden>
+          <div class="progress-meta"><span id="uploadProgressText">正在上传</span><b id="uploadProgressValue">0%</b></div>
+          <div class="progress-track"><div class="progress-fill" id="uploadProgressBar"></div></div>
+        </div>
+      </section>
+
+      <section class="panel analysis-panel" id="analysisPanel" hidden>
+        <div class="panel-heading">
+          <div>
+            <div class="section-kicker">REVIEW WORKSPACE</div>
+            <h2>核对视频与人物</h2>
+          </div>
+          <span class="model-tag">SCRIBE V3 · 逐句对齐</span>
+        </div>
+        <div class="job-summary" id="jobSummary"></div>
+        <div class="job-actions">
+          <p class="muted">先看视频，再识别字幕。点选字幕即可跳到对应片段并试听，确认说话人后在下方分配音色。</p>
+          <div class="review-actions">
+            <button class="button button-quiet" id="changeVideoButton" type="button">更换视频</button>
+            <button class="button button-primary" id="analyzeButton" type="button">识别说话人 <span>→</span></button>
+          </div>
+        </div>
+        <div class="analysis-progress" id="analysisProgress" hidden>
+          <div class="progress-meta"><span id="analysisProgressText">正在分析音频</span><b id="analysisProgressValue">0%</b></div>
+          <div class="progress-track"><div class="progress-fill" id="analysisProgressBar"></div></div>
+        </div>
+        <div class="alert-list" id="analysisAlerts"></div>
+        <div class="review-workspace">
+          <aside class="review-player">
+            <div class="review-player-heading"><div><b>源视频</b><span class="muted">点击字幕可定位到对应时间</span></div><span class="quiet-tag" id="activeSegmentTime">未选中片段</span></div>
+            <video id="sourcePreviewVideo" controls playsinline preload="metadata"></video>
+            <div class="review-speakers"><h3>识别到的说话人</h3><div class="speaker-summary" id="speakerSummary"></div></div>
+          </aside>
+          <div class="review-transcript">
+            <div class="transcript-heading">
+              <div><h3>逐句核对</h3><p class="muted">点选台词试听并检查说话人归属。</p></div>
+              <span class="quiet-tag" id="segmentCount">0 个片段</span>
+            </div>
+            <div class="segment-list" id="segmentList"></div>
+            <p class="transcript-empty muted" id="transcriptEmpty">识别完成后，台词会显示在这里。选择任意一句即可定位并播放。</p>
+          </div>
+        </div>
+        <div class="mapping-panel" id="mappingPanel" hidden>
+          <div class="panel-heading">
+          <div>
+            <div class="section-kicker">VOICE CASTING</div>
+            <h2>核对人物并分配音色</h2>
+          </div>
+            <span class="quiet-tag">每个人使用不同 Voice ID</span>
+          </div>
+        <div class="mapping-toolbar">
+          <label class="voice-source-field">
+            <span>音色来源</span>
+            <select id="voiceSource">
+              <option value="my">我的音色库</option>
+              <option value="shared">共享音色库</option>
+            </select>
+          </label>
+          <label class="search-field">
+            <span>⌕</span>
+            <input id="voiceSearch" type="search" placeholder="搜索音色名称">
+          </label>
+          <label class="voice-source-field voice-filter-field" id="languageFilterWrap" hidden>
+            <span>语言代码</span>
+            <input id="voiceLanguage" type="text" maxlength="16" placeholder="例如 zh">
+          </label>
+          <label class="voice-source-field voice-filter-field" id="accentFilterWrap" hidden>
+            <span>口音</span>
+            <input id="voiceAccent" type="text" maxlength="32" placeholder="例如 american">
+          </label>
+          <label class="voice-source-field voice-filter-field" id="localeFilterWrap" hidden>
+            <span>地区代码</span>
+            <input id="voiceLocale" type="text" maxlength="16" placeholder="例如 zh-CN">
+          </label>
+          <button class="button button-quiet" id="reloadVoicesButton" type="button">刷新音色库</button>
+        </div>
+        <div class="voice-hint" id="voiceHint">正在读取当前 ElevenLabs Workspace 可用音色。</div>
+        <button class="button button-quiet" id="loadMoreVoicesButton" type="button" hidden>加载更多共享音色</button>
+        <div class="speaker-mapping-list" id="speakerMappingList"></div>
+        <div class="mapping-footer">
+          <p class="muted">也可以手动粘贴 Voice ID。请确保目标音色已在当前 API Key 的账户中可用。</p>
+          <button class="button button-primary" id="saveMappingButton" type="button">保存人物音色 <span>→</span></button>
+        </div>
+        <div class="mapping-errors" id="mappingErrors" hidden></div>
+        </div>
+      </section>
+
+      <section class="panel conversion-panel" id="conversionPanel" hidden>
+        <div class="panel-heading">
+          <div>
+            <div class="section-kicker">03 / VOICE ASSETS</div>
+            <h2>03 · 先生成并试听配音片段</h2>
+          </div>
+          <span class="model-tag">MULTILINGUAL STS V2</span>
+        </div>
+        <div class="conversion-summary" id="conversionSummary"></div>
+        <div class="conversion-progress" id="conversionProgress" hidden>
+          <div class="progress-meta"><span id="conversionProgressText">准备变声任务</span><b id="conversionProgressValue">0%</b></div>
+          <div class="progress-track"><div class="progress-fill" id="conversionProgressBar"></div></div>
+          <div class="conversion-counts" id="conversionCounts"></div>
+        </div>
+        <div class="alert-list" id="conversionAlerts"></div>
+        <div class="conversion-actions">
+          <p class="muted">点击生成后会按每个语句片段调用 Voice Changer，ElevenLabs 将按实际处理音频计费。失败片段可重试，已成功片段不会重复生成。配音完成后，继续准备音乐素材，再点击最终合成。</p>
+          <button class="button button-primary" id="convertButton" type="button">生成配音片段（付费） <span>→</span></button>
+        </div>
+        <div id="voiceAssets" hidden>
+          <h3>配音片段已就绪，请先试听</h3>
+          <div class="voice-clips" id="voiceClips"></div>
+          <video id="dialoguePreview" controls playsinline preload="none" hidden></video>
+          <button type="button" class="button button-quiet" id="continueMusicButton">下一步：添加配乐</button>
+        </div>
+      </section>
+
+      <section class="panel" id="musicPanel" hidden>
+        <div class="panel-heading"><div><div class="section-kicker">04 / MUSIC</div><h2>配音确认后，再添加背景音乐</h2></div><span class="quiet-tag" id="musicStageStatus">等待配音素材</span></div>
+        <p class="muted">复用上一阶段的配音。此步骤只准备音乐素材，不会自动生成最终成品；不需要音乐时可直接进入最终合成。</p>
+          <fieldset class="music-settings">
+            <legend>自动配乐（可选）</legend>
+            <label class="music-toggle"><input id="musicEnabled" type="checkbox">使用新背景音乐并自动躲避对白</label>
+            <p class="muted">启用后，新音乐连续铺底并替换原背景；对白时轻柔降低，停顿时恢复。未变声的对白仍保留原声。配音就绪后，生成配乐会将配音预览视频上传到 ElevenLabs 并产生额外费用（视频最大 200 MB）。</p>
+            <label for="musicDescription">配乐风格（可选）</label>
+            <textarea id="musicDescription" rows="2" maxlength="3800" placeholder="例如：古装悬疑氛围，古琴与低弦，克制、持续，不要人声"></textarea>
+            <label class="music-toggle"><input id="referenceAudio" type="checkbox">参考视频现有音频的音乐风格</label>
+            <button type="button" class="button button-quiet" id="generateMusicButton">生成新配乐（付费）</button>
+            <p class="voice-hint" id="musicStatus" role="status">尚未生成配乐。勾选后，请先点击生成按钮。</p>
+            <audio id="musicPreview" controls preload="none" hidden></audio>
+            <label for="musicFile">或者上传已有配乐 / 已分离的背景音轨（MP3 / WAV，最长需覆盖视频，最大 100 MB）</label>
+            <input id="musicFile" type="file" accept="audio/*">
+            <button id="musicUploadButton" type="button" class="button button-quiet">上传已有音乐（本地，不扣费）</button>
+            <h3>Auto Ducking 自动混音</h3>
+            <p class="muted">复用 Auto Ducking Lab 的区间合并和混音核心；配乐先统一响度，再按对白自动降低，音乐本身始终连续播放。</p>
+            <p class="voice-hint" id="musicSpeechLevel" role="status"></p>
+            <button type="button" class="button button-quiet" id="resetDuckingButton">恢复推荐混音参数（-6 dB / 再降 8 dB）</button>
+            <div class="duck-controls">
+              <label>无人讲话时的音乐基础音量 <output id="musicLevelValue">-6 dB</output><input id="musicLevel" type="range" min="-30" max="0" step="1" value="-6"></label>
+              <label>讲话时音乐额外衰减 <output id="musicReductionValue">-8 dB</output><input id="musicReduction" type="range" min="0" max="30" step="1" value="8"></label>
+              <label>合并停顿阈值 <output id="duckGapValue">1.0 秒</output><input id="duckGap" type="range" min="0" max="2.5" step="0.1" value="1"></label>
+              <label>降低音量渐变时长 <output id="duckAttackValue">150 ms</output><input id="duckAttack" type="range" min="0.05" max="0.7" step="0.05" value="0.15"></label>
+              <label>恢复音量渐变时长 <output id="duckReleaseValue">550 ms</output><input id="duckRelease" type="range" min="0.1" max="2" step="0.05" value="0.55"></label>
+            </div>
+            <p class="muted">讲话前预留 150 ms、讲话后预留 250 ms；绿色为识别区间，蓝色为合并并预留后的 ducking 区间。</p>
+            <div class="duck-timeline" aria-label="说话与音乐避让时间轴"><div class="duck-lane" id="rawLane"></div><div class="duck-lane" id="mergedLane"></div></div>
+            <div class="duck-axis"><span>0 秒</span><span id="duckEndTime">结束</span></div>
+            <label for="manualDuck">手动区间（可选，每行 起点-终点，单位秒）</label>
+            <textarea id="manualDuck" rows="2" placeholder="留空使用 Scribe 自动区间，例如 1.0-4.2"></textarea>
+            <p id="duckTimelineStatus" class="voice-hint" role="status"></p>
+          </fieldset>
+      </section>
+      <section class="panel" id="finalMixPanel" hidden>
+        <div class="panel-heading"><div><div class="section-kicker">05 / FINAL MIX</div><h2>调整混音，生成最终成品</h2></div></div>
+        <p id="finalAssetSummary" class="muted">等待配音素材</p>
+        <div class="mix-settings">
+          <label for="speechVolume">变声区间的原音轨保留音量：<output id="speechVolumeValue">0%</output></label>
+          <input id="speechVolume" type="range" min="0" max="100" step="1" value="0">
+          <p class="muted">调整后点击「生成最终成品」应用。默认 0% 消除原声叠加；非变声区间保留原音量。区间内的背景音乐也会随原对白一起降低。未成功变声的区间保留原声。</p>
+
+          <button type="button" class="button button-quiet" id="remixButton">生成最终成品 / 应用新混音（本地，不扣费）</button>
+          <p class="voice-hint" id="mixAppliedStatus" role="status">尚未应用本次混音设置</p>
+
+        </div>
+      </section>
+
+      <section class="panel compare-panel" id="comparePanel" hidden>
+        <div class="panel-heading">
+          <div>
+            <div class="section-kicker">A / B COMPARISON</div>
+            <h2>原视频与变声结果</h2>
+          </div>
+          <span class="status-pill status-ready"><i></i> 视频已生成</span>
+        </div>
+        <div class="compare-grid">
+          <article class="video-card">
+            <div class="video-label"><span>A</span><div><b>原始视频</b><small>ORIGINAL</small></div></div>
+            <video id="originalVideo" controls playsinline preload="metadata"></video>
+          </article>
+          <article class="video-card">
+            <div class="video-label"><span>B</span><div><b>逐人变声</b><small>VOICE CHANGED</small></div></div>
+            <video id="changedVideo" controls playsinline preload="metadata"></video>
+          </article>
+        </div>
+        <p class="muted">两边分别使用播放器控制。播放一边时会暂停另一边，便于听清音色差异。</p>
+        <div class="download-row">
+          <div><b>变声视频已准备好</b><p class="muted">画面沿用原视频，音轨已按原时间轴重新合成。</p></div>
+          <a class="button button-primary" id="downloadButton" href="#" download="voice-changed.mp4">下载 MP4 <span>↓</span></a>
+        </div>
+      </section>
+
+      <footer class="footer-note">
+        <span>LOCAL DEMO · ELEVENLABS API</span>
+        <span>仅用于已获授权的视频和目标音色。多人重叠讲话暂不保证逐人转换。</span>
+      </footer>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <section class="debug-overlay" id="debugPanel" role="dialog" aria-modal="true" aria-label="诊断记录" hidden>
+    <div class="debug-dialog">
+      <div class="debug-titlebar">
+        <div><span class="section-kicker">LOCAL DIAGNOSTICS</span><h2>自动调试记录</h2></div>
+        <button type="button" id="debugCloseButton" class="button button-quiet">关闭</button>
+      </div>
+      <p class="muted" id="debugHint">记录前端错误、请求失败和后端任务阶段；不包含 API Key、源视频和对话内容。</p>
+      <div class="debug-actions">
+        <button type="button" class="button button-quiet" id="debugRefreshButton">刷新记录</button>
+        <button type="button" class="button button-quiet" id="debugCopyButton">复制报告</button>
+        <button type="button" class="button button-primary" id="debugDownloadButton">下载诊断 JSON</button>
+      </div>
+      <div id="debugLogList" class="debug-log-list"><p class="muted">尚无诊断记录。</p></div>
+      <p class="debug-footnote">诊断记录只保存在当前运行内存中；关闭页面或服务后自动清空。复制或下载报告是由你主动触发的操作。</p>
+    </div>
+  </section>
+  <script defer src="/assets/diagnostics.js"></script>
+  <script type="module" src="/assets/app.js"></script>
+</body>
+</html>
