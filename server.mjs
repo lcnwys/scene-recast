@@ -29,7 +29,8 @@ import { generateBackgroundMusic } from "./lib/music.mjs";
 
 const APP_DIR = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = path.join(APP_DIR, "public");
-const DATA_DIR = path.resolve(process.env.VOICE_DEMO_DATA_DIR || path.join(APP_DIR, "data"));
+const LEGACY_DATA_DIR = path.join(APP_DIR, "data");
+const DATA_DIR = path.resolve(process.env.VOICE_DEMO_DATA_DIR || path.join(APP_DIR, "storage"));
 const JOBS_DIR = path.join(DATA_DIR, "projects");
 const diagnostics = createDiagnostics(path.join(DATA_DIR, "logs", "diagnostics.jsonl"));
 const clientRates = new Map();
@@ -143,7 +144,7 @@ function publicJob(job) {
     lastMix: job.lastMix || null,
     musicUrl: job.musicReady ? "/api/jobs/" + job.id + "/file/music" : "",
     speechVolume: job.speechVolume ?? 0,
-    storagePath: "data/projects/" + job.id,
+    storagePath: "storage/projects/" + job.id,
     warnings: job.warnings,
     error: job.error,
     analysisError: job.analysisError,
@@ -1037,6 +1038,15 @@ async function route(req, res) {
   }
 
   json(res, 404, { error: "接口或页面不存在" });
+}
+
+if (!process.env.VOICE_DEMO_DATA_DIR && DATA_DIR !== LEGACY_DATA_DIR) {
+  const legacyExists = await fs.access(LEGACY_DATA_DIR).then(() => true, () => false);
+  const storageExists = await fs.access(DATA_DIR).then(() => true, () => false);
+  if (legacyExists && !storageExists) {
+    await fs.rename(LEGACY_DATA_DIR, DATA_DIR);
+    process.stderr.write("[voice-demo] 已将旧 data/ 项目数据迁移到 storage/\n");
+  }
 }
 
 await fs.mkdir(DATA_DIR, { recursive: true, mode: 0o700 });

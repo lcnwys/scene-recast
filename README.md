@@ -177,7 +177,7 @@ flowchart LR
 ### 本地保留什么
 
 ```text
-data/                              # 整个目录被 Git 忽略
+storage/                           # 项目本机持久存储，整个目录被 Git 忽略
 ├── projects/
 │   └── <project-id>/               # 每个视频独立一个项目
 │       ├── job.json                # 字幕、人物映射与处理设置
@@ -196,7 +196,9 @@ data/                              # 整个目录被 Git 忽略
 
 这些文件会持久保存，关闭服务、刷新页面或更换视频不会自动删除。可以在“已保存项目”中切换；“清理本次数据”会在确认后删除当前项目文件。API Key 不写入上述数据。
 
-`data/`、`exports/`、`backups/` 和 `.env*` 已由 Git 忽略。**发布源码 ZIP 时也要排除这些目录，不能只依赖 `.gitignore`。** 日志对常见凭据格式做脱敏，分享诊断导出前仍应检查内容。
+升级时如果项目中只有旧版 `data/`，应用首次启动会将整个目录迁移到 `storage/`；现有项目、音视频和日志都会保留。
+
+`storage/`、旧版遗留的 `data/`、`exports/`、`backups/` 和 `.env*` 已由 Git 忽略。**发布源码 ZIP 时也要排除这些目录，不能只依赖 `.gitignore`。** 日志对常见凭据格式做脱敏，分享诊断导出前仍应检查内容。
 
 ## 配置与常见问题
 
@@ -205,7 +207,7 @@ data/                              # 整个目录被 Git 忽略
 | 环境变量 | 默认值 / 用途 |
 | --- | --- |
 | `VOICE_DEMO_PORT` | `3218`，本机监听端口 |
-| `VOICE_DEMO_DATA_DIR` | 项目根目录的 `data/`；自定义目录也应排除在版本管理之外 |
+| `VOICE_DEMO_DATA_DIR` | 项目根目录的 `storage/`；自定义目录也应排除在版本管理之外 |
 | `FFMPEG_PATH` / `FFPROBE_PATH` | 可执行文件完整路径；默认自动查找 `PATH` 和常见安装目录 |
 | `PYTHON_PATH` | `python3`，Auto Ducking 使用的 Python 可执行文件 |
 | `ELEVENLABS_BASE_URL` | `https://api.elevenlabs.io`；仅在明确需要其他 API 地址时更改，Key 会发送到该地址 |

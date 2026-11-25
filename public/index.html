@@ -49,7 +49,7 @@
           <button class="button button-quiet" type="button" id="clearApiKeyButton">清除 Key</button>
         </div>
         <p class="api-key-hint" id="apiKeyHint">请使用你自己的 ElevenLabs API Key。Key 只保存在当前页面内存，通过本机后端请求 ElevenLabs；不会写入文件或浏览器存储。</p>
-        <p class="api-key-hint">本 Demo 需在你自己的电脑本地运行，不要部署到公开网址。视频、音频和字幕按项目持久保存在本机 data/projects/，关闭服务后仍保留；仅在点击「清理本次数据」后删除；提取出的音频会发送到 ElevenLabs 进行识别和变声。</p>
+        <p class="api-key-hint">本 Demo 需在你自己的电脑本地运行，不要部署到公开网址。视频、音频和字幕按项目持久保存在项目目录 storage/projects/，关闭服务后仍保留；仅在点击「清理本次数据」后删除；提取出的音频会发送到 ElevenLabs 进行识别和变声。</p>
       </section>
 
       <label class="project-picker">已保存项目
@@ -75,7 +75,7 @@
           <input id="fileInput" type="file" accept="video/mp4,video/quicktime,video/x-matroska,video/webm,.mp4,.mov,.m4v,.mkv,.webm">
           <span class="upload-symbol">↑</span>
           <strong>拖入视频，或点击选择文件</strong>
-          <span class="muted">视频按项目保存在本机 data/projects/ 目录；提取音频会发送到 ElevenLabs API</span>
+          <span class="muted">视频按项目保存在本机 storage/projects/ 目录；提取音频会发送到 ElevenLabs API</span>
         </label>
         <div class="selected-file" id="selectedFile" hidden>
           <div class="file-symbol">MP4</div>
